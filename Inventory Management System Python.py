@@ -93,6 +93,42 @@ def place_order():
     if not product_found:
         print("Product ID not found. Please try again.")
 
+def update_product():
+    products = load_data(PRODUCTS_FILE)
+
+    # Display available products
+    print("\nAvailable Products:")
+    for product in products:
+        print(f"ID: {product[0]}, Name: {product[1]}, Description: {product[2]}, Price: {product[3]}, Stock: {product[4]}")
+
+    # Get the Product ID to update
+    product_id = input("Enter Product ID to update: ")
+    product_found = False
+
+    for product in products:
+        if product[0] == product_id:
+            product_found = True
+            print("\nCurrent Details:")
+            print(f"Name: {product[1]}")
+            print(f"Description: {product[2]}")
+            print(f"Price: {product[3]}")
+            print(f"Stock: {product[4]}")
+
+            # Get updated details
+            name = input("Enter new Name (leave blank to keep current): ") or product[1]
+            description = input("Enter new Description (leave blank to keep current): ") or product[2]
+            price = input("Enter new Price (leave blank to keep current): ") or product[3]
+            stock = input("Enter new Stock (leave blank to keep current): ") or product[4]
+
+            # Update the product details
+            product[1], product[2], product[3], product[4] = name, description, price, stock
+            save_data(PRODUCTS_FILE, products)
+            print("Product updated successfully!")
+            break
+
+    if not product_found:
+        print("Product ID not found. Please try again.")
+
 # Function to display the menu and handle user input
 def display_menu():
     while True:
@@ -101,7 +137,8 @@ def display_menu():
         print("2. Add a New Supplier")
         print("3. View Inventory")
         print("4. Place an Order")
-        print("5. Exit")
+        print("5. Update Product Details")  # New option for updating product details
+        print("6. Exit")
         choice = input("Enter your choice: ")
 
         if choice == "1":
@@ -111,8 +148,10 @@ def display_menu():
         elif choice == "3":
             view_inventory()
         elif choice == "4":
-            place_order()  # Call place_order function
+            place_order()
         elif choice == "5":
+            update_product()  # Call the update_product function
+        elif choice == "6":
             print("Exiting the program. Goodbye!")
             break
         else:
