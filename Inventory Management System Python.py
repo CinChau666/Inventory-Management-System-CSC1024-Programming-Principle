@@ -53,9 +53,10 @@ def update_product():
 
     # Get the Product ID to update
     product_found = False
-
+    print("ID | Name | Description | Price | Stock")
+    
     for product in products[1:]:      # Skip the header row (products[0])
-        print(f"ID: {product[0]}, Name: {product[1]}, Description: {product[2]}, Price: {product[3]}, Stock: {product[4]}")
+        print(f"{product[0]} | {product[1]} | {product[2]} | {product[3]} | {product[4]}")
 
     product_id = input("\nEnter the Product ID of the product you want to update: ")
 
@@ -71,7 +72,6 @@ def update_product():
             products[index] = [product[0], new_name, new_description, new_price, new_stock]
             save_data(PRODUCTS_FILE, products)
             print("Product details updated successfully!")
-            break
 
     if not product_found:
         print("Product ID not found. Please try again.")
@@ -119,6 +119,12 @@ def place_order():
     order_date = input("Enter Order Date (YYYY-MM-DD): ")
 
     # Validate product availability
+    # product[0] = Product ID
+    # product[1] = Name
+    # product[2] = Description
+    # product[3] = Price
+    # product[4] = Stock
+
     product_found = False
     for product in products:
         if product[0] == product_id:
