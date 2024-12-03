@@ -21,22 +21,40 @@ def save_data(file_path, data):
         file.writelines([",".join(map(str, record)) + "\n" for record in data])
 
 # Function to add a new product
+
+# Define column widths
+id_width = 12
+name_width = 20
+desc_width = 30
+price_width = 8
+stock_width = 6
+
 def add_product():
     # Check if file exists and contains a header
     if not os.path.exists(PRODUCTS_FILE) or os.path.getsize(PRODUCTS_FILE) == 0:
         # File doesn't exist or is empty, so write the header
         with open(PRODUCTS_FILE, "w") as f:
-            f.write("Product ID, Name, Description, Price, Stock\n")
+            f.write(f"{'Product ID'.ljust(id_width)} | "
+                f"{'Name'.ljust(name_width)} | "
+                f"{'Description'.ljust(desc_width)} | "
+                f"{'Price'.rjust(price_width)} | "
+                f"{'Stock'.rjust(stock_width)}\n")
 
     # Append a new product
-    product_id = input("Enter Product ID: ")
-    name = input("Enter Product Name: ")
-    description = input("Enter Product Description: ")
-    price = float(input("Enter Product Price: "))
-    stock = int(input("Enter Product Stock: "))
+    product_id = input("Enter Product ID: ").strip()
+    name = input("Enter Product Name: ").strip()
+    description = input("Enter Product Description: ").strip()
+    price = input("Enter Product Price: ").strip()
+    stock = input("Enter Product Stock: ").strip()
 
     with open(PRODUCTS_FILE, "a") as f:
-        f.write(f"{product_id}, {name}, {description}, {price}, {stock}\n")
+        f.write(
+            f"{product_id.ljust(id_width)} | "
+            f"{name.ljust(name_width)} | "
+            f"{description.ljust(desc_width)} | "
+            f"{price.rjust(price_width)} | "
+            f"{stock.rjust(stock_width)}\n"
+        )
 
     print("Product added successfully!")
 
@@ -102,20 +120,28 @@ def place_order():
         with open(ORDERS_FILE, "w") as f:
             f.write("Order ID | Product ID | Quantity | Order Date\n")
 
-    # Display available products
+    # Load available products
     products = load_data(PRODUCTS_FILE)
     if not products:
         print("No products available for ordering.")
         return
 
+    # Display available products with alignment
     print("\nAvailable Products:")
-    for product in products:
-        print(f"ID: {product[0]}, Name: {product[1]}, Stock: {product[4]}")
+    print(f"{'Product ID'.ljust(12)} | {'Name'.ljust(15)} | {'Stock'.rjust(6)}")
+    print("-" * 40)
+    for product in products[1:]:  # Skip header row
+        print(f"{product[0].ljust(12)} | {product[1].ljust(15)} | {product[4].rjust(6)}")
+    print("-" * 40)
 
     # Get order details
     order_id = input("Enter Order ID: ")
     product_id = input("Enter Product ID: ")
-    quantity = int(input("Enter Quantity: "))
+    try:
+        quantity = int(input("Enter Quantity: "))
+    except ValueError:
+        print("Invalid quantity. Please enter a number.")
+        return
     order_date = input("Enter Order Date (YYYY-MM-DD): ")
 
     # Validate product availability
@@ -149,15 +175,44 @@ def place_order():
 # Function to display inventory
 def view_inventory():
     products = load_data(PRODUCTS_FILE)
-    if not products:
+    
+    # Check if the products file is empty or contains only a header
+    if not products or len(products) <= 1:
         print("No products available.")
         return
-    print("\nCurrent Inventory:")
-    print("ID | Name | Description | Price | Stock")
-    print("-" * 40)
-    for product in products:
-        print(" | ".join(product))
 
+    # Remove duplicate header rows if they exist
+    header = products[0]
+    products = [header] + [product for product in products[1:] if product != header]
+
+    # Define column widths
+    id_width = 12
+    name_width = 20
+    desc_width = 30
+    price_width = 8
+    stock_width = 6
+
+    # Print header row
+    print("\nCurrent Inventory:")
+    print(
+        f"{'Product ID'.ljust(id_width)} | "
+        f"{'Name'.ljust(name_width)} | "
+        f"{'Description'.ljust(desc_width)} | "
+        f"{'Price'.rjust(price_width)} | "
+        f"{'Stock'.rjust(stock_width)}"
+    )
+    print("-" * (id_width + name_width + desc_width + price_width + stock_width + 13))  # For dividers and spaces
+
+    # Print product rows
+    for product in products[1:]:  # Skip header row
+        print(
+            f"{product[0].ljust(id_width)} | "
+            f"{product[1].ljust(name_width)} | "
+            f"{product[2].ljust(desc_width)} | "
+            f"{product[3].rjust(price_width)} | "
+            f"{product[4].rjust(stock_width)}"
+        )
+        
 # Function to generate low stock report
 def generate_reports():
     print("\nReport Options:\n1. Low Stock Items\n2. Product Sales\n3. Supplier Orders")
