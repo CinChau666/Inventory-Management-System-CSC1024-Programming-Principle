@@ -34,25 +34,29 @@ def add_product():
         # File doesn't exist or is empty, so write the header
         with open(PRODUCTS_FILE, "w") as f:
             f.write(f"{'Product ID'.ljust(id_width)} | "
-                f"{'Name'.ljust(name_width)} | "
-                f"{'Description'.ljust(desc_width)} | "
-                f"{'Price'.rjust(price_width)} | "
-                f"{'Stock'.rjust(stock_width)}\n")
+                    f"{'Name'.ljust(name_width)} | "
+                    f"{'Description'.ljust(desc_width)} | "
+                    f"{'Price'.rjust(price_width)} | "
+                    f"{'Stock'.rjust(stock_width)}\n")
 
     # Append a new product
     product_id = input("Enter Product ID: ").strip()
     name = input("Enter Product Name: ").strip()
     description = input("Enter Product Description: ").strip()
-    price = input("Enter Product Price: ").strip()
-    stock = input("Enter Product Stock: ").strip()
+    try:
+        price = float(input("Enter Product Price: ").strip())  # Validate numeric price
+        stock = int(input("Enter Product Stock: ").strip())  # Validate numeric stock
+    except ValueError:
+        print("Invalid input for price or stock. Please enter numeric values.")
+        return
 
     with open(PRODUCTS_FILE, "a") as f:
         f.write(
             f"{product_id.ljust(id_width)} | "
             f"{name.ljust(name_width)} | "
             f"{description.ljust(desc_width)} | "
-            f"{price.rjust(price_width)} | "
-            f"{stock.rjust(stock_width)}\n"
+            f"{str(price).rjust(price_width)} | "
+            f"{str(stock).rjust(stock_width)}\n"
         )
 
     print("Product added successfully!")
@@ -128,12 +132,6 @@ quantity_width = 6
 order_date_width = 15
 
 def place_order():
-    # Constants for alignment widths
-    order_id_width = 10
-    product_id_width = 12
-    quantity_width = 8
-    order_date_width = 15
-
     # Check if file exists and contains a header
     if not os.path.exists(ORDERS_FILE) or os.path.getsize(ORDERS_FILE) == 0:
         # File doesn't exist or is empty, so write the header
@@ -147,6 +145,8 @@ def place_order():
 
     # Load available products
     products = load_data(PRODUCTS_FILE)
+    print("DEBUG: Loaded products list:", products)  # Debug output
+
     if not products or len(products) <= 1:  # Ensure there are products after the header row
         print("No products available for ordering.")
         return
@@ -202,7 +202,6 @@ def place_order():
 
     if not product_found:
         print("Product ID not found. Please try again.")
-
 # Function to display inventory
 def view_inventory():
     products = load_data(PRODUCTS_FILE)
