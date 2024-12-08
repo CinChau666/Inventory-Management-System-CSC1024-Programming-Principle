@@ -1,324 +1,194 @@
 import os
 
-# Inventory Management System
-# File paths
+# Constants for file paths
 PRODUCTS_FILE = "products.txt"
 SUPPLIERS_FILE = "suppliers.txt"
 ORDERS_FILE = "orders.txt"
 
+# File headers
+PRODUCT_HEADERS = ["Product ID", "Name", "Description", "Price", "Stock"]
+SUPPLIER_HEADERS = ["Supplier ID", "Name", "Contact"]
+ORDER_HEADERS = ["Order ID", "Product ID", "Quantity", "Order Date"]
 
-# Function to load data from a file
+
+# Utility functions
+def initialize_file(file_path, headers):
+    """Ensure a file exists and has a header."""
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        with open(file_path, "w") as f:
+            f.write(" | ".join(headers) + "\n")
+
+
 def load_data(file_path):
+    """Load data from a file into a list of lists."""
     try:
         with open(file_path, "r") as file:
-            return [line.strip().split(",") for line in file.readlines()]
+            return [line.strip().split(" | ") for line in file.readlines()]
     except FileNotFoundError:
         return []
 
-# Function to save data to a file
+
 def save_data(file_path, data):
+    """Save a list of lists to a file."""
     with open(file_path, "w") as file:
-        file.writelines([",".join(map(str, record)) + "\n" for record in data])
+        file.writelines([" | ".join(map(str, record)) + "\n" for record in data])
 
-# Function to add a new product
-# Define column widths
-id_width = 12
-name_width = 20
-desc_width = 30
-price_width = 8
-stock_width = 6
 
+def display_records(records, headers):
+    """Display tabular data."""
+    print("\n" + " | ".join(headers))
+    print("-" * 40)
+    for record in records[1:]:  # Skip header
+        print(" | ".join(map(str, record)))
+    print("-" * 40)
+
+
+def get_numeric_input(prompt, data_type=int):
+    """Get numeric input with validation."""
+    while True:
+        try:
+            return data_type(input(prompt).strip())
+        except ValueError:
+            print(f"Invalid input. Please enter a {data_type.__name__}.")
+
+
+# Core functionality
 def add_product():
-    # Check if file exists and contains a header
-    if not os.path.exists(PRODUCTS_FILE) or os.path.getsize(PRODUCTS_FILE) == 0:
-        # File doesn't exist or is empty, so write the header
-        with open(PRODUCTS_FILE, "w") as f:
-            f.write(f"{'Product ID'.ljust(id_width)} | "
-                    f"{'Name'.ljust(name_width)} | "
-                    f"{'Description'.ljust(desc_width)} | "
-                    f"{'Price'.rjust(price_width)} | "
-                    f"{'Stock'.rjust(stock_width)}\n")
-
-    # Append a new product
+    initialize_file(PRODUCTS_FILE, PRODUCT_HEADERS)
     product_id = input("Enter Product ID: ").strip()
     name = input("Enter Product Name: ").strip()
     description = input("Enter Product Description: ").strip()
-    try:
-        price = float(input("Enter Product Price: ").strip())  # Validate numeric price
-        stock = int(input("Enter Product Stock: ").strip())  # Validate numeric stock
-    except ValueError:
-        print("Invalid input for price or stock. Please enter numeric values.")
-        return
+    price = get_numeric_input("Enter Product Price: ", float)
+    stock = get_numeric_input("Enter Product Stock: ", int)
 
-    with open(PRODUCTS_FILE, "a") as f:
-        f.write(
-            f"{product_id.ljust(id_width)} | "
-            f"{name.ljust(name_width)} | "
-            f"{description.ljust(desc_width)} | "
-            f"{str(price).rjust(price_width)} | "
-            f"{str(stock).rjust(stock_width)}\n"
-        )
-
+    product_data = [product_id, name, description, price, stock]
+    save_data(PRODUCTS_FILE, load_data(PRODUCTS_FILE) + [product_data])
     print("Product added successfully!")
 
-def update_product():
-    
-    products = load_data(PRODUCTS_FILE)
 
-    if len(products) <= 1:  # Check if there's no data or only the header row
+def update_product():
+    products = load_data(PRODUCTS_FILE)
+    if len(products) <= 1:
         print("No products available to update.")
         return
 
-    # Display available products
-    print("\nAvailable Products:")
+    display_records(products, PRODUCT_HEADERS)
+    product_id = input("Enter the Product ID to update: ").strip()
 
-    # Get the Product ID to update
-    product_found = False
-    print("ID | Name | Description | Price | Stock")
-    
-    for product in products[1:]:      # Skip the header row (products[0])
-        print(f"{product[0]} | {product[1]} | {product[2]} | {product[3]} | {product[4]}")
-
-    product_id = input("\nEnter the Product ID of the product you want to update: ")
-
-    for index, product in enumerate(products):
+    for index, product in enumerate(products[1:], start=1):  # Skip header
         if product[0] == product_id:
             print(f"Current details: {product}")
-            new_name = input("Enter New Product Name (leave blank to keep current): ") or product[1] 
-            new_description = input("Enter New Product Description (leave blank to keep current): ") or product[2]
-            new_price = float(input("Enter New Product Price (leave blank to keep current): ")) or product[3]
-            new_stock = int(input("Enter New Product Stock (leave blank to keep current): ")) or product[4]
+            new_name = input("Enter New Name (leave blank to keep current): ") or product[1]
+            new_description = input("Enter New Description (leave blank to keep current): ") or product[2]
+            new_price = input("Enter New Price (leave blank to keep current): ").strip() or product[3]
+            new_stock = input("Enter New Stock (leave blank to keep current): ").strip() or product[4]
 
-            # Update the product details
             products[index] = [product[0], new_name, new_description, new_price, new_stock]
             save_data(PRODUCTS_FILE, products)
-            print("Product details updated successfully!")
+            print("Product updated successfully!")
+            return
 
-    if not product_found:
-        print("Product ID not found. Please try again.")
+    print("Product ID not found.")
 
-# Function to add a new supplier
-supplier_id_width = 20
-supplier_name_width = 25
-contact_width = 20
-# Define column widths
+
 def add_supplier():
-    # Check if file exists and contains a header
-    if not os.path.exists(SUPPLIERS_FILE) or os.path.getsize(SUPPLIERS_FILE) == 0:
-        # File doesn't exist or is empty, so write the header
-        with open(SUPPLIERS_FILE, "w") as f:
-            f.write(f"{'Supplier ID' .ljust(supplier_id_width)} | "
-            f"{'Name' .ljust(supplier_name_width)} | "
-            f"{'Contact' .ljust(contact_width)}\n")
+    initialize_file(SUPPLIERS_FILE, SUPPLIER_HEADERS)
+    supplier_id = input("Enter Supplier ID: ").strip()
+    name = input("Enter Supplier Name: ").strip()
+    contact = input("Enter Supplier Contact: ").strip()
 
-    # Append a new supplier
-    supplier_id = input("Enter Supplier ID: ")
-    name = input("Enter Supplier Name: ")
-    contact = input("Enter Supplier Contact: ")
-
-    with open(SUPPLIERS_FILE, "a") as f:
-        f.write(
-            f"{supplier_id.ljust(supplier_id_width)} | "
-            f"{name.ljust(supplier_name_width)} | "
-            f"{contact.ljust(contact_width)}\n"
-        )
-
+    supplier_data = [supplier_id, name, contact]
+    save_data(SUPPLIERS_FILE, load_data(SUPPLIERS_FILE) + [supplier_data])
     print("Supplier added successfully!")
 
-# Function to place order
-order_id_width = 15
-product_id_width = 20
-quantity_width = 6
-order_date_width = 15
 
 def place_order():
-    # Check if file exists and contains a header
-    if not os.path.exists(ORDERS_FILE) or os.path.getsize(ORDERS_FILE) == 0:
-        # File doesn't exist or is empty, so write the header
-        with open(ORDERS_FILE, "w") as f:
-            f.write(
-                f"{'Order ID'.ljust(order_id_width)} | "
-                f"{'Product ID'.ljust(product_id_width)} | "
-                f"{'Quantity'.ljust(quantity_width)} | "
-                f"{'Order Date'.ljust(order_date_width)}\n"
-            )
-
-    # Load available products
+    initialize_file(ORDERS_FILE, ORDER_HEADERS)
     products = load_data(PRODUCTS_FILE)
-    print("DEBUG: Loaded products list:", products)  # Debug output
-
-    if not products or len(products) <= 1:  # Ensure there are products after the header row
+    if len(products) <= 1:
         print("No products available for ordering.")
         return
 
-    # Display available products with alignment
-    print("\nAvailable Products:")
-    print(f"{'Product ID'.ljust(12)} | {'Name'.ljust(15)} | {'Stock'.rjust(6)}")
-    print("-" * 40)
-    for product in products[1:]:  # Skip header row
-        print(f"{product[0].ljust(12)} | {product[1].ljust(15)} | {product[4].rjust(6)}")
-    print("-" * 40)
-
-    # Get order details
+    display_records(products, PRODUCT_HEADERS)
     order_id = input("Enter Order ID: ").strip()
     product_id = input("Enter Product ID: ").strip()
+    quantity = get_numeric_input("Enter Quantity: ")
+    order_date = input("Enter Order Date (DD-MM-YYYY): ").strip()
 
-    try:
-        quantity = int(input("Enter Quantity: ").strip())
-    except ValueError:
-        print("Invalid quantity. Please enter a number.")
-        return
-
-    order_date = input("Enter Order Date (YYYY-MM-DD): ").strip()
-
-    # Validate product availability
-    product_found = False
-    for product in products[1:]:  # Skip header row
+    for product in products[1:]:
         if product[0] == product_id:
-            product_found = True
-            try:
-                stock = int(product[4])  # Ensure stock is numeric
-            except ValueError:
-                print(f"Invalid stock value for Product ID {product_id}. Please check the file.")
+            stock = int(product[4])
+            if stock >= quantity:
+                product[4] = str(stock - quantity)
+                save_data(PRODUCTS_FILE, products)
+                order_data = [order_id, product_id, quantity, order_date]
+                save_data(ORDERS_FILE, load_data(ORDERS_FILE) + [order_data])
+                print("Order placed successfully!")
+                return
+            else:
+                print("Insufficient stock.")
                 return
 
-            if stock >= quantity:
-                product[4] = str(stock - quantity)  # Update stock
-                save_data(PRODUCTS_FILE, products)  # Save updated inventory
+    print("Product ID not found.")
 
-                # Append the new order to the file
-                with open(ORDERS_FILE, "a") as f:
-                    f.write(
-                        f"{order_id.ljust(order_id_width)} | "
-                        f"{product_id.ljust(product_id_width)} | "
-                        f"{str(quantity).ljust(quantity_width)} | "
-                        f"{order_date.ljust(order_date_width)}\n"
-                    )
 
-                print("Order placed successfully!")
-            else:
-                print(f"Insufficient stock. Only {stock} units available.")
-            break
-
-    if not product_found:
-        print("Product ID not found. Please try again.")
-# Function to display inventory
 def view_inventory():
     products = load_data(PRODUCTS_FILE)
-    if not products:
+    if len(products) <= 1:
         print("No products available.")
         return
-    print("\nCurrent Inventory:")
-    print("ID | Name | Description | Price | Stock")
-    print("-" * 40)
-    for product in products:
-        print(" | ".join(product))
+    display_records(products, PRODUCT_HEADERS)
 
-# Function to generate low stock report
+
 def generate_reports():
-    print("\nReport Options:\n1. Low Stock Items\n2. Product Sales\n3. Supplier Orders")
-    report_choice = input("Enter your choice: ")
-
-    if report_choice == "1":
+    print("\n1. Low Stock Items\n2. Product Sales")
+    choice = input("Enter your choice: ").strip()
+    if choice == "1":
         generate_low_stock_report()
-    elif report_choice == "2":
+    elif choice == "2":
         generate_product_sales_report()
-    elif report_choice == "3":
-        generate_supplier_orders_report()
     else:
-        print("Invalid choice. Returning to the main menu.")
+        print("Invalid choice.")
+
 
 def generate_low_stock_report():
     products = load_data(PRODUCTS_FILE)
-    threshold = int(input("Enter stock threshold: "))
+    threshold = get_numeric_input("Enter stock threshold: ")
     print("\nLow Stock Items:")
     print("ID | Name | Stock")
     print("-" * 30)
-    for product in products:
+    for product in products[1:]:
         if int(product[4]) < threshold:
             print(f"{product[0]} | {product[1]} | {product[4]}")
-    print("-" * 30)
 
 
-# Function to generate product sales report
 def generate_product_sales_report():
     orders = load_data(ORDERS_FILE)
-    product_sales = {}
-
-    for order in orders:
-        product_id = order[1]
-        quantity = int(order[2])
-        product_sales[product_id] = product_sales.get(product_id, 0) + quantity
+    sales = {}
+    for order in orders[1:]:
+        product_id, quantity = order[1], int(order[2])
+        sales[product_id] = sales.get(product_id, 0) + quantity
 
     print("\nProduct Sales Report:")
     print("Product ID | Quantity Sold")
     print("-" * 30)
-    for product_id, total_sold in product_sales.items():
-        print(f"{product_id} | {total_sold}")
-    print("-" * 30)
+    for product_id, quantity in sales.items():
+        print(f"{product_id} | {quantity}")
 
-# Function to generate supplier orders report
-def generate_supplier_orders_report():
-    try:
-        products = load_data(PRODUCTS_FILE)
-        suppliers = load_data(SUPPLIERS_FILE)
-        orders = load_data(ORDERS_FILE)
 
-        if not products or not suppliers or not orders:
-            print("Error: Missing or incomplete data in one or more files.")
-            return
-
-        # Create a product-to-supplier mapping
-        product_to_supplier = {}
-        for product in products[1:]:  # Skip the header row
-            if len(product) < 2:  # Ensure product row has enough columns
-                print(f"Warning: Malformed product entry skipped: {product}")
-                continue
-            product_id = product[0]
-            supplier_id = product[1]  # Assuming the second column is supplier ID
-            product_to_supplier[product_id] = supplier_id
-
-        # Aggregate orders by supplier
-        supplier_orders = {}
-        for order in orders[1:]:  # Skip the header row
-            if len(order) < 3:  # Ensure order row has enough columns
-                print(f"Warning: Malformed order entry skipped: {order}")
-                continue
-            product_id = order[1]
-            try:
-                quantity = int(order[2])  # Ensure quantity is an integer
-            except ValueError:
-                print(f"Warning: Invalid quantity in order skipped: {order}")
-                continue
-
-            supplier_id = product_to_supplier.get(product_id, "Unknown")
-            supplier_orders[supplier_id] = supplier_orders.get(supplier_id, 0) + quantity
-
-        # Display the report
-        print("\nSupplier Orders Report:")
-        print("Supplier ID | Total Orders")
-        print("-" * 30)
-        for supplier_id, total_orders in supplier_orders.items():
-            print(f"{supplier_id} | {total_orders}")
-        print("-" * 30)
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-
-# Function to display the menu and handle user input
 def display_menu():
     while True:
-        print("*" * 38)
-        print("|  Inventory Management System       |")
-        print("|  1. Add a New Product              |")
-        print("|  2. Update Product Details         |")
-        print("|  3. Add a New Supplier             |")
-        print("|  4. Place an Order                 |")
-        print("|  5. View Inventory                 |")
-        print("|  6. Generate Reports               |")
-        print("|  7. Exit                           |")
-        print("*" * 38)
-        choice = input("Enter your choice: ")
+        print("\n" + "*" * 30)
+        print("Inventory Management System")
+        print("1. Add a New Product")
+        print("2. Update Product Details")
+        print("3. Add a New Supplier")
+        print("4. Place an Order")
+        print("5. View Inventory")
+        print("6. Generate Reports")
+        print("7. Exit")
+        print("*" * 30)
+        choice = input("Enter your choice: ").strip()
 
         if choice == "1":
             add_product()
@@ -333,10 +203,13 @@ def display_menu():
         elif choice == "6":
             generate_reports()
         elif choice == "7":
-            print("Exiting the program. Goodbye!")
+            print("Goodbye!")
             break
         else:
             print("Invalid choice. Please try again.")
 
-# Initialize the program
-display_menu()
+
+# Initialize and run the program
+if __name__ == "__main__":
+    display_menu()
+
