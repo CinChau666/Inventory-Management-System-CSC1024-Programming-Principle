@@ -188,28 +188,18 @@ def display_menu():
         print("6. Generate Reports")
         print("7. Exit")
         print("*" * 30)
-        choice = input("Enter your choice: ").strip()
+        
+        choice = int(input("Enter your choice: "))
 
-        if choice == "1":
-            add_product()
-        elif choice == "2":
-            update_product()
-        elif choice == "3":
-            add_supplier()
-        elif choice == "4":
-            place_order()
-        elif choice == "5":
-            view_inventory()
-        elif choice == "6":
-            generate_reports()
-        elif choice == "7":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
-
-
+        match choice: 
+            case 1: add_product()
+            case 2: update_product()
+            case 3: add_supplier()
+            case 4: place_order()
+            case 5: view_inventory()
+            case 6: generate_reports()
+            case 7: break
+            case _: print("Invalid choice. Please try again.")
+        
 # Initialize and run the program
-if __name__ == "__main__":
-    display_menu()
-
+display_menu()
